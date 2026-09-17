@@ -46,7 +46,25 @@ const path = require('path');
 })();
 
 const PORT = process.env.PORT || 3000;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
+const DEFAULT_GEMINI_MODEL = 'models/gemini-3.6-flash';
+const normalizeGeminiModel = (modelName = DEFAULT_GEMINI_MODEL) => {
+  const rawValue = String(modelName || '').trim();
+  if (!rawValue) return DEFAULT_GEMINI_MODEL;
+
+  const compactValue = rawValue
+    .replace(/^model\//i, '')
+    .replace(/^models\//i, '')
+    .replace(/^['"]|['"]$/g, '')
+    .trim();
+
+  const lowerValue = compactValue.toLowerCase();
+  if (lowerValue.startsWith('gemini-2') || lowerValue.includes('gemini-2.')) {
+    return DEFAULT_GEMINI_MODEL;
+  }
+
+  return compactValue.startsWith('models/') ? compactValue : `models/${compactValue}`;
+};
+const GEMINI_MODEL = normalizeGeminiModel(process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL);
 const BASE_DIR = __dirname;
 
 const MIME_TYPES = {
@@ -154,12 +172,12 @@ const server = http.createServer(async (req, res) => {
           parts: [{ text: m.text || m.content || '' }]
         }));
 
-        // Lista de modelos suportados para garantir compatibilidade resiliente (gemini-3.6-flash)
-        const requestedModel = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
+        // Lista de modelos suportados para garantir compatibilidade resiliente com o Gemini 3.6 Flash
+        const requestedModel = normalizeGeminiModel(process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL);
         const candidateModels = [
           requestedModel,
-          'gemini-3.6-flash',
-          'gemini-2.5-flash'
+          DEFAULT_GEMINI_MODEL,
+          'models/gemini-3.6-flash'
         ].filter((m, i, arr) => m && arr.indexOf(m) === i);
 
         let candidateText = null;
@@ -169,7 +187,7 @@ const server = http.createServer(async (req, res) => {
         for (const modelToTry of candidateModels) {
           try {
             // Endpoint padrão do Google Gemini: models/gemini-3.6-flash:generateContent
-            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelToTry)}:generateContent?key=${encodeURIComponent(userApiKey)}`;
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/${modelToTry}:generateContent?key=${encodeURIComponent(userApiKey)}`;
 
             const geminiResponse = await fetch(geminiUrl, {
               method: 'POST',

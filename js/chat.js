@@ -51,6 +51,24 @@ Se o usuário perguntar sobre assuntos completamente alheios ao Squad A (como re
     'Como posso contratar os serviços?'
   ];
 
+  const normalizeGeminiModelName = (modelName = 'models/gemini-3.6-flash') => {
+    const rawValue = String(modelName || '').trim();
+    if (!rawValue) return 'models/gemini-3.6-flash';
+
+    const compactValue = rawValue
+      .replace(/^model\//i, '')
+      .replace(/^models\//i, '')
+      .replace(/^['"]|['"]$/g, '')
+      .trim();
+
+    const lowerValue = compactValue.toLowerCase();
+    if (lowerValue.startsWith('gemini-2') || lowerValue.includes('gemini-2.')) {
+      return 'models/gemini-3.6-flash';
+    }
+
+    return compactValue.startsWith('models/') ? compactValue : `models/${compactValue}`;
+  };
+
   class AngelinaChatWidget {
     constructor() {
       this.isOpen = false;
@@ -59,7 +77,7 @@ Se o usuário perguntar sobre assuntos completamente alheios ao Squad A (como re
       this.apiKeyStorageKey = 'angelina_gemini_api_key';
       this.apiKey = localStorage.getItem(this.apiKeyStorageKey) || '';
       this.serverHasKey = false;
-      this.serverModel = 'gemini-3.6-flash';
+      this.serverModel = 'models/gemini-3.6-flash';
       this.messages = this.loadHistory();
       this.init();
     }
@@ -114,7 +132,7 @@ Se o usuário perguntar sobre assuntos completamente alheios ao Squad A (como re
           const data = await res.json();
           if (data && data.hasServerKey) {
             this.serverHasKey = true;
-            this.serverModel = data.model || 'gemini-3.6-flash';
+            this.serverModel = normalizeGeminiModelName(data.model || 'models/gemini-3.6-flash');
             this.updateConfigStatus();
           }
         }
@@ -463,14 +481,17 @@ Se o usuário perguntar sobre assuntos completamente alheios ao Squad A (como re
         parts: [{ text: m.text }]
       }));
 
-      // Chamada direta à API do Google Gemini (Client-side Fallback com suporte a gemini-3.6-flash)
-      const clientModels = ['gemini-3.6-flash', 'gemini-2.5-flash'];
+      // Chamada direta à API do Google Gemini (Client-side Fallback com suporte ao modelo atual)
+      const clientModels = [
+        normalizeGeminiModelName('models/gemini-3.6-flash'),
+        'models/gemini-3.6-flash'
+      ].filter((m, i, arr) => m && arr.indexOf(m) === i);
       let clientErrorMsg = '';
 
       for (const mName of clientModels) {
         try {
           // Endpoint padrão: models/gemini-3.6-flash:generateContent
-          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/${mName}:generateContent?key=${encodeURIComponent(this.apiKey)}`;
 
           const response = await fetch(geminiUrl, {
             method: 'POST',

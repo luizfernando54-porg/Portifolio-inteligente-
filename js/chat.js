@@ -57,7 +57,7 @@ Se o usuário perguntar sobre assuntos completamente alheios ao Squad A (por exe
       this.apiKeyStorageKey = 'angelina_gemini_api_key';
       this.apiKey = localStorage.getItem(this.apiKeyStorageKey) || '';
       this.serverHasKey = false;
-      this.serverModel = 'gemini-1.5-flash';
+      this.serverModel = 'gemini-2.5-flash';
       this.messages = this.loadHistory();
       this.init();
     }
@@ -112,7 +112,7 @@ Se o usuário perguntar sobre assuntos completamente alheios ao Squad A (por exe
           const data = await res.json();
           if (data && data.hasServerKey) {
             this.serverHasKey = true;
-            this.serverModel = data.model || 'gemini-1.5-flash';
+            this.serverModel = data.model || 'gemini-2.5-flash';
             this.updateConfigStatus();
           }
         }
@@ -240,12 +240,12 @@ Se o usuário perguntar sobre assuntos completamente alheios ao Squad A (por exe
       const engineStatus = document.getElementById('chat-engine-status');
 
       if (this.apiKey) {
-        if (statusLabel) statusLabel.innerHTML = '🟢 Conectado via Chave Pessoal (Gemini 1.5 Flash)';
-        if (engineStatus) engineStatus.innerHTML = 'Gemini 1.5 Flash Ativo • Squad A';
+        if (statusLabel) statusLabel.innerHTML = '🟢 Conectado via Chave Pessoal (Gemini 2.5 Flash)';
+        if (engineStatus) engineStatus.innerHTML = 'Gemini 2.5 Flash Ativo • Squad A';
         if (keyInput) keyInput.value = this.apiKey;
       } else if (this.serverHasKey) {
         if (statusLabel) statusLabel.innerHTML = '🟢 Conectado ao Servidor (.env Ativo)';
-        if (engineStatus) engineStatus.innerHTML = 'Angelina Online • Gemini 1.5 Flash';
+        if (engineStatus) engineStatus.innerHTML = 'Angelina Online • Gemini 2.5 Flash';
         if (keyInput) keyInput.placeholder = 'Chave ativa no servidor via .env';
       } else {
         if (statusLabel) statusLabel.innerHTML = '🟡 Chave não configurada';
@@ -461,39 +461,55 @@ Se o usuário perguntar sobre assuntos completamente alheios ao Squad A (por exe
         parts: [{ text: m.text }]
       }));
 
-      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+      // Chamada direta à API do Google Gemini (Client-side Fallback com suporte a gemini-2.5-flash)
+      const clientModels = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+      let clientErrorMsg = '';
 
-      const response = await fetch(geminiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: {
-            parts: [{ text: ANGELINA_SYSTEM_INSTRUCTION }]
-          },
-          contents: contents,
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1000
+      for (const mName of clientModels) {
+        try {
+          // Endpoint padrão: models/gemini-2.5-flash:generateContent
+          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+
+          const response = await fetch(geminiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              system_instruction: {
+                parts: [{ text: ANGELINA_SYSTEM_INSTRUCTION }]
+              },
+              contents: contents,
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 1000
+              }
+            })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            const errMsg = data.error?.message || 'Erro na resposta do Google Gemini.';
+            clientErrorMsg = errMsg;
+            if (response.status === 404 || errMsg.includes('not found') || errMsg.includes('not supported')) {
+              continue; // Tenta o próximo modelo
+            }
+            if (data.error?.status === 'INVALID_ARGUMENT' || response.status === 400 || response.status === 403) {
+              throw new Error('Sua Chave de API do Gemini parece inválida ou sem permissão. Clique no ícone ⚙️ no topo para atualizar.');
+            }
+            throw new Error(errMsg);
           }
-        })
-      });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        const errMsg = data.error?.message || 'Erro na resposta do Google Gemini.';
-        if (data.error?.status === 'INVALID_ARGUMENT' || response.status === 400 || response.status === 403) {
-          throw new Error('Sua Chave de API do Gemini parece inválida ou sem permissão. Clique no ícone ⚙️ no topo para atualizar.');
+          const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (replyText) {
+            return replyText;
+          }
+        } catch (e) {
+          if (e.message.includes('inválida') || e.message.includes('permissão')) throw e;
+          clientErrorMsg = e.message;
         }
-        throw new Error(errMsg);
       }
 
-      const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!replyText) {
-        throw new Error('A IA não gerou texto válido.');
-      }
-
-      return replyText;
+      throw new Error(clientErrorMsg || 'A IA não gerou texto válido.');
     }
 
     promptForApiKey(pendingQuery) {

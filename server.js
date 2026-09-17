@@ -46,7 +46,7 @@ const path = require('path');
 })();
 
 const PORT = process.env.PORT || 3000;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 const BASE_DIR = __dirname;
 
 const MIME_TYPES = {
@@ -154,43 +154,73 @@ const server = http.createServer(async (req, res) => {
           parts: [{ text: m.text || m.content || '' }]
         }));
 
-        // Endpoint padrão: models/gemini-1.5-flash:generateContent
-        const selectedModel = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(selectedModel)}:generateContent?key=${encodeURIComponent(userApiKey)}`;
+        // Lista de modelos suportados para garantir compatibilidade resiliente
+        const requestedModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+        const candidateModels = [
+          requestedModel,
+          'gemini-2.5-flash',
+          'gemini-2.0-flash'
+        ].filter((m, i, arr) => m && arr.indexOf(m) === i);
 
-        const geminiResponse = await fetch(geminiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            system_instruction: {
-              parts: [{ text: ANGELINA_SYSTEM_INSTRUCTION }]
-            },
-            contents: contents,
-            generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: 1000
+        let candidateText = null;
+        let successfulModel = requestedModel;
+        let lastErrorMsg = '';
+
+        for (const modelToTry of candidateModels) {
+          try {
+            // Endpoint padrão do Google Gemini: models/gemini-2.5-flash:generateContent
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelToTry)}:generateContent?key=${encodeURIComponent(userApiKey)}`;
+
+            const geminiResponse = await fetch(geminiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                system_instruction: {
+                  parts: [{ text: ANGELINA_SYSTEM_INSTRUCTION }]
+                },
+                contents: contents,
+                generationConfig: {
+                  temperature: 0.7,
+                  maxOutputTokens: 1000
+                }
+              })
+            });
+
+            const geminiData = await geminiResponse.json();
+
+            if (!geminiResponse.ok) {
+              const errMsg = geminiData.error?.message || 'Erro ao comunicar com o Google Gemini.';
+              lastErrorMsg = errMsg;
+              // Se o modelo for 404/não suportado no v1beta, tenta automaticamente o próximo da lista
+              if (geminiResponse.status === 404 || errMsg.includes('not found') || errMsg.includes('not supported')) {
+                console.warn(`[Gemini API] Modelo ${modelToTry} não disponível. Tentando modelo alternativo...`);
+                continue;
+              }
+              // Erro com chave de API (400/403) ou outro erro definitivo
+              res.writeHead(geminiResponse.status, { 'Content-Type': 'application/json; charset=utf-8' });
+              res.end(JSON.stringify({ error: 'GEMINI_ERROR', message: errMsg }));
+              return;
             }
-          })
-        });
 
-        const geminiData = await geminiResponse.json();
-
-        if (!geminiResponse.ok) {
-          const errMsg = geminiData.error?.message || 'Erro ao comunicar com o Google Gemini.';
-          res.writeHead(geminiResponse.status, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end(JSON.stringify({ error: 'GEMINI_ERROR', message: errMsg }));
-          return;
+            const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) {
+              candidateText = text;
+              successfulModel = modelToTry;
+              break;
+            }
+          } catch (errLoop) {
+            lastErrorMsg = errLoop.message;
+          }
         }
 
-        const candidateText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
         if (!candidateText) {
           res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end(JSON.stringify({ error: 'EMPTY_RESPONSE', message: 'A IA não retornou texto válido.' }));
+          res.end(JSON.stringify({ error: 'GEMINI_ERROR', message: lastErrorMsg || 'A IA não retornou texto válido.' }));
           return;
         }
 
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ reply: candidateText, model: selectedModel }));
+        res.end(JSON.stringify({ reply: candidateText, model: successfulModel }));
       } catch (err) {
         console.error('Erro no endpoint /api/chat:', err);
         res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });

@@ -76,8 +76,8 @@ const geminiChecks = [
     test: chatJsContent.includes('ANGELINA_SYSTEM_INSTRUCTION') && serverJsContent.includes('ANGELINA_SYSTEM_INSTRUCTION')
   },
   {
-    label: 'Endpoint do Google Gemini configurado (gemini-1.5-flash)',
-    test: chatJsContent.includes('models/gemini-1.5-flash:generateContent') && serverJsContent.includes('models/gemini-1.5-flash:generateContent')
+    label: 'Endpoint do Google Gemini configurado (gemini-2.5-flash)',
+    test: chatJsContent.includes('gemini-2.5-flash') && serverJsContent.includes('gemini-2.5-flash')
   },
   {
     label: 'Rota de API Backend /api/chat presente no server.js',

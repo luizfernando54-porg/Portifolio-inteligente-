@@ -46,7 +46,7 @@ const path = require('path');
 })();
 
 const PORT = process.env.PORT || 3000;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
 const BASE_DIR = __dirname;
 
 const MIME_TYPES = {
@@ -154,12 +154,12 @@ const server = http.createServer(async (req, res) => {
           parts: [{ text: m.text || m.content || '' }]
         }));
 
-        // Lista de modelos suportados para garantir compatibilidade resiliente
-        const requestedModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+        // Lista de modelos suportados para garantir compatibilidade resiliente (gemini-3.6-flash)
+        const requestedModel = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
         const candidateModels = [
           requestedModel,
-          'gemini-2.5-flash',
-          'gemini-2.0-flash'
+          'gemini-3.6-flash',
+          'gemini-2.5-flash'
         ].filter((m, i, arr) => m && arr.indexOf(m) === i);
 
         let candidateText = null;
@@ -168,7 +168,7 @@ const server = http.createServer(async (req, res) => {
 
         for (const modelToTry of candidateModels) {
           try {
-            // Endpoint padrão do Google Gemini: models/gemini-2.5-flash:generateContent
+            // Endpoint padrão do Google Gemini: models/gemini-3.6-flash:generateContent
             const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelToTry)}:generateContent?key=${encodeURIComponent(userApiKey)}`;
 
             const geminiResponse = await fetch(geminiUrl, {

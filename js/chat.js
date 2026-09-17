@@ -57,7 +57,7 @@ Se o usuário perguntar sobre assuntos completamente alheios ao Squad A (por exe
       this.apiKeyStorageKey = 'angelina_gemini_api_key';
       this.apiKey = localStorage.getItem(this.apiKeyStorageKey) || '';
       this.serverHasKey = false;
-      this.serverModel = 'gemini-2.5-flash';
+      this.serverModel = 'gemini-3.6-flash';
       this.messages = this.loadHistory();
       this.init();
     }
@@ -112,7 +112,7 @@ Se o usuário perguntar sobre assuntos completamente alheios ao Squad A (por exe
           const data = await res.json();
           if (data && data.hasServerKey) {
             this.serverHasKey = true;
-            this.serverModel = data.model || 'gemini-2.5-flash';
+            this.serverModel = data.model || 'gemini-3.6-flash';
             this.updateConfigStatus();
           }
         }
@@ -240,12 +240,12 @@ Se o usuário perguntar sobre assuntos completamente alheios ao Squad A (por exe
       const engineStatus = document.getElementById('chat-engine-status');
 
       if (this.apiKey) {
-        if (statusLabel) statusLabel.innerHTML = '🟢 Conectado via Chave Pessoal (Gemini 2.5 Flash)';
-        if (engineStatus) engineStatus.innerHTML = 'Gemini 2.5 Flash Ativo • Squad A';
+        if (statusLabel) statusLabel.innerHTML = '🟢 Conectado via Chave Pessoal (Gemini 3.6 Flash)';
+        if (engineStatus) engineStatus.innerHTML = 'Gemini 3.6 Flash Ativo • Squad A';
         if (keyInput) keyInput.value = this.apiKey;
       } else if (this.serverHasKey) {
         if (statusLabel) statusLabel.innerHTML = '🟢 Conectado ao Servidor (.env Ativo)';
-        if (engineStatus) engineStatus.innerHTML = 'Angelina Online • Gemini 2.5 Flash';
+        if (engineStatus) engineStatus.innerHTML = 'Angelina Online • Gemini 3.6 Flash';
         if (keyInput) keyInput.placeholder = 'Chave ativa no servidor via .env';
       } else {
         if (statusLabel) statusLabel.innerHTML = '🟡 Chave não configurada';
@@ -461,13 +461,13 @@ Se o usuário perguntar sobre assuntos completamente alheios ao Squad A (por exe
         parts: [{ text: m.text }]
       }));
 
-      // Chamada direta à API do Google Gemini (Client-side Fallback com suporte a gemini-2.5-flash)
-      const clientModels = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+      // Chamada direta à API do Google Gemini (Client-side Fallback com suporte a gemini-3.6-flash)
+      const clientModels = ['gemini-3.6-flash', 'gemini-2.5-flash'];
       let clientErrorMsg = '';
 
       for (const mName of clientModels) {
         try {
-          // Endpoint padrão: models/gemini-2.5-flash:generateContent
+          // Endpoint padrão: models/gemini-3.6-flash:generateContent
           const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${encodeURIComponent(this.apiKey)}`;
 
           const response = await fetch(geminiUrl, {

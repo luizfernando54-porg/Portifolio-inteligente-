@@ -6,7 +6,7 @@
  * ==========================================================================
  */
 
-(function() {
+(function () {
   'use strict';
 
   // System Instruction Completa para o Google Gemini
@@ -38,7 +38,7 @@ BASE DE CONHECIMENTO COMPLETA DO SQUAD A:
   * Reestruturação de Redes Corporativas: Queda de 80% em incidentes de conectividade com DHCP e DNS por Joan Antonio.
 
 REGRA RESTRITIVA DE ESCOPO:
-Se o usuário perguntar sobre assuntos completamente alheios ao Squad A (por exemplo: receitas culinárias, futebol, fofocas de celebridades, política geral partidária, piadas aleatórias ou perguntas sobre outros países sem relação com o portfólio), responda educadamente em PT-BR que você é a Angelina, assistente dedicada exclusivamente ao Squad A e à FICR, e convide o usuário a conhecer nossos membros, projetos, cases de sucesso ou planos de desenvolvimento.`;
+Se o usuário perguntar sobre assuntos completamente alheios ao Squad A (por exemplo: receitas culinárias, futebol, fofocas de celebridades, política geral partidária, piadas aleatórias ou perguntas sobre outros países sem relação com o portfólio), responda educadamente em PT-BR que você é a Angelina, assistente dedicada exclusivamente ao Squad A e à FICR, e convide o usuário a conhecer nossos membros, projetos, cases de sucesso ou planos de desenvolvimento, e não colque textos longos, deixe as respostas mais curtas e explicativas e sem colocar # nas resposas`;
 
   // Chips Rápidos de Inicialização
   const QUICK_PROMPTS = [

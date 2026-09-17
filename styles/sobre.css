@@ -1,0 +1,99 @@
+/* ==========================================================================
+   SOBRE PAGE STYLES - SQUAD A ("OS DEBS")
+   ========================================================================== */
+
+.profiles-list {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-bottom: 48px;
+}
+
+.profile-card {
+  padding: 36px;
+  border-left: 5px solid var(--primary);
+  background: #ffffff;
+}
+
+.profile-card:hover {
+  border-left-color: var(--secondary);
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.profile-title-area h2 {
+  font-size: 1.6rem;
+  margin-bottom: 6px;
+  color: var(--text-main);
+}
+
+.profile-badge {
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary);
+  background-color: var(--primary-light);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+}
+
+.profile-body p {
+  font-size: 1.025rem;
+  line-height: 1.8;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.profile-footer {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border);
+  font-size: 0.925rem;
+  color: var(--text-main);
+}
+
+.profile-footer strong {
+  color: var(--primary);
+}
+
+/* FICR Card */
+.ficr-institution-card {
+  background: linear-gradient(135deg, #eff6ff 0%, #ecfeff 100%);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  padding: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  margin-bottom: 20px;
+}
+
+.ficr-content h2 {
+  font-size: 1.6rem;
+  margin-bottom: 12px;
+}
+
+.ficr-content p {
+  font-size: 1rem;
+  line-height: 1.7;
+  max-width: 680px;
+}
+
+@media (max-width: 768px) {
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .ficr-institution-card {
+    flex-direction: column;
+    text-align: center;
+  }
+}

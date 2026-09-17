@@ -1,0 +1,143 @@
+/* ==========================================================================
+   CASE DE SUCESSO PAGE STYLES - SQUAD A ("OS DEBS")
+   ========================================================================== */
+
+/* KPI Banner */
+.kpi-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 32px 24px;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: #ffffff;
+  margin-bottom: 48px;
+  border-radius: var(--radius-md);
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.kpi-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.kpi-number {
+  font-family: var(--font-heading);
+  font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+  font-weight: 800;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+
+.kpi-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 500;
+  max-width: 180px;
+}
+
+.kpi-divider {
+  width: 1px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Case Studies */
+.cases-list {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  margin-bottom: 48px;
+}
+
+.case-card {
+  padding: 36px;
+  background: #ffffff;
+}
+
+.case-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.case-badge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--primary-light);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+}
+
+.case-lead {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.case-card h2 {
+  font-size: 1.45rem;
+  margin-bottom: 24px;
+}
+
+.case-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.case-block {
+  padding: 20px;
+  border-radius: var(--radius-md);
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+}
+
+.case-block h4 {
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+  color: var(--text-main);
+}
+
+.case-block p {
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.case-block.challenge {
+  border-left: 4px solid #ef4444;
+}
+
+.case-block.solution {
+  border-left: 4px solid #06b6d4;
+}
+
+.case-block.result {
+  border-left: 4px solid #10b981;
+}
+
+.case-cta {
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  padding: 40px;
+}
+
+.case-cta h3 {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+  .kpi-divider {
+    display: none;
+  }
+}

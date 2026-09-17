@@ -1,0 +1,174 @@
+/* ==========================================================================
+   SERVICOS PAGE STYLES - SQUAD A ("OS DEBS")
+   ========================================================================== */
+
+.planos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 32px;
+  align-items: stretch;
+  margin-bottom: 56px;
+}
+
+.plano-card {
+  background: #ffffff;
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border-radius: var(--radius-lg);
+  border-top: 5px solid var(--primary);
+}
+
+.plano-card.popular {
+  border-top: 5px solid #f59e0b;
+  box-shadow: 0 10px 30px rgba(245, 158, 11, 0.15);
+  transform: translateY(-8px);
+}
+
+.plano-card.premium {
+  border-top: 5px solid #8b5cf6;
+  box-shadow: 0 10px 30px rgba(139, 92, 246, 0.15);
+}
+
+.popular-tag, .premium-tag {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+}
+
+.popular-tag {
+  background: #f59e0b;
+}
+
+.premium-tag {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+}
+
+.plano-header {
+  text-align: center;
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.plano-type {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--primary);
+  display: block;
+  margin-bottom: 6px;
+}
+
+.plano-header h3 {
+  font-size: 1.5rem;
+  margin-bottom: 16px;
+}
+
+.preco-wrapper {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.moeda {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-right: 4px;
+}
+
+.valor {
+  font-family: var(--font-heading);
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1;
+}
+
+.centavos {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.plano-desc {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.plano-features {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 32px;
+  flex: 1;
+}
+
+.plano-features li {
+  font-size: 0.925rem;
+  color: var(--text-main);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.4;
+}
+
+.check-icon {
+  color: #10b981;
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.plano-action {
+  margin-top: auto;
+}
+
+/* AI Service Highlight Section */
+.ai-service-highlight {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: #ffffff;
+  padding: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 36px;
+  border-radius: var(--radius-lg);
+}
+
+.highlight-info h2 {
+  color: #ffffff;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin-bottom: 12px;
+}
+
+.highlight-info p {
+  color: #cbd5e1;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  max-width: 720px;
+}
+
+@media (max-width: 860px) {
+  .plano-card.popular {
+    transform: none;
+  }
+
+  .ai-service-highlight {
+    flex-direction: column;
+    text-align: center;
+  }
+}

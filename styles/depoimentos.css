@@ -1,0 +1,81 @@
+/* ==========================================================================
+   DEPOIMENTOS PAGE STYLES - SQUAD A ("OS DEBS")
+   ========================================================================== */
+
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 32px;
+  margin-bottom: 48px;
+}
+
+.testimonial-card {
+  padding: 36px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border-top: 4px solid var(--primary);
+}
+
+.testimonial-stars {
+  color: #f59e0b;
+  font-size: 1.25rem;
+  letter-spacing: 2px;
+  margin-bottom: 16px;
+}
+
+.testimonial-text {
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-bottom: 24px;
+  flex: 1;
+}
+
+.testimonial-author {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.author-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--accent-gradient);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+}
+
+.author-name {
+  font-size: 1.05rem;
+  margin-bottom: 2px;
+  color: var(--text-main);
+}
+
+.author-role {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.testimonials-cta {
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  padding: 40px;
+}
+
+.testimonials-cta h3 {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}

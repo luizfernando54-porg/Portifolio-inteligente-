@@ -56,6 +56,8 @@ Se o usuário perguntar sobre assuntos completamente alheios ao Squad A (por exe
       this.storageKey = 'angelina_gemini_chat_history_v2';
       this.apiKeyStorageKey = 'angelina_gemini_api_key';
       this.apiKey = localStorage.getItem(this.apiKeyStorageKey) || '';
+      this.serverHasKey = false;
+      this.serverModel = 'gemini-1.5-flash';
       this.messages = this.loadHistory();
       this.init();
     }
@@ -100,6 +102,23 @@ Se o usuário perguntar sobre assuntos completamente alheios ao Squad A (por exe
       this.bindEvents();
       this.renderMessages();
       this.updateConfigStatus();
+      this.checkServerStatus();
+    }
+
+    async checkServerStatus() {
+      try {
+        const res = await fetch('/api/status');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.hasServerKey) {
+            this.serverHasKey = true;
+            this.serverModel = data.model || 'gemini-1.5-flash';
+            this.updateConfigStatus();
+          }
+        }
+      } catch (e) {
+        // Backend offline ou executando em hospedagem puramente estática
+      }
     }
 
     renderWidget() {
@@ -221,12 +240,17 @@ Se o usuário perguntar sobre assuntos completamente alheios ao Squad A (por exe
       const engineStatus = document.getElementById('chat-engine-status');
 
       if (this.apiKey) {
-        if (statusLabel) statusLabel.innerHTML = '🟢 Conectado ao Gemini 1.5 Flash';
+        if (statusLabel) statusLabel.innerHTML = '🟢 Conectado via Chave Pessoal (Gemini 1.5 Flash)';
         if (engineStatus) engineStatus.innerHTML = 'Gemini 1.5 Flash Ativo • Squad A';
         if (keyInput) keyInput.value = this.apiKey;
+      } else if (this.serverHasKey) {
+        if (statusLabel) statusLabel.innerHTML = '🟢 Conectado ao Servidor (.env Ativo)';
+        if (engineStatus) engineStatus.innerHTML = 'Angelina Online • Gemini 1.5 Flash';
+        if (keyInput) keyInput.placeholder = 'Chave ativa no servidor via .env';
       } else {
-        if (statusLabel) statusLabel.innerHTML = '🟡 Chave não informada';
+        if (statusLabel) statusLabel.innerHTML = '🟡 Chave não configurada';
         if (engineStatus) engineStatus.innerHTML = 'IA Gemini • Clique ⚙️ para ativar';
+        if (keyInput) keyInput.placeholder = 'Cole sua chave AIzaSy...';
       }
     }
 
@@ -344,13 +368,7 @@ Se o usuário perguntar sobre assuntos completamente alheios ao Squad A (por exe
         return;
       }
 
-      // 2. Se não houver API key configurada, abrir modal ou solicitar
-      if (!this.apiKey) {
-        this.promptForApiKey(text);
-        return;
-      }
-
-      // 3. Chamar Gemini em tempo real
+      // 2. Chamar IA (servidor via .env ou chave informada no cliente)
       this.setTyping(true);
 
       try {
@@ -368,7 +386,11 @@ Se o usuário perguntar sobre assuntos completamente alheios ao Squad A (por exe
       } catch (err) {
         console.error('Erro na chamada ao Gemini:', err);
         this.setTyping(false);
-        this.showError(err.message || 'Erro ao comunicar com a IA do Gemini. Por favor, tente novamente ou verifique sua API Key no ícone ⚙️.');
+        if (err.isMissingKey || (!this.apiKey && !this.serverHasKey)) {
+          this.promptForApiKey(text);
+        } else {
+          this.showError(err.message || 'Erro ao comunicar com a IA do Gemini. Por favor, tente novamente ou configure sua API Key no ícone ⚙️.');
+        }
       }
     }
 
@@ -378,35 +400,68 @@ Se o usuário perguntar sobre assuntos completamente alheios ao Squad A (por exe
         .filter(m => m.text && m.id !== 'welcome')
         .slice(-10); // Envia os últimos 10 turnos para manter contexto rico e veloz
 
-      // Tentar via proxy do servidor backend /api/chat se disponível
+      // Tentar via proxy do servidor backend /api/chat com a chave do .env ou do cliente
       try {
+        const reqHeaders = { 'Content-Type': 'application/json' };
+        if (this.apiKey) {
+          reqHeaders['x-gemini-key'] = this.apiKey;
+        }
+
         const serverRes = await fetch('/api/chat', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-gemini-key': this.apiKey
-          },
+          headers: reqHeaders,
           body: JSON.stringify({
             messages: validMessages,
-            apiKey: this.apiKey
+            apiKey: this.apiKey || undefined
           })
         });
 
-        if (serverRes.ok) {
-          const data = await serverRes.json();
-          if (data.reply) return data.reply;
+        const data = await serverRes.json().catch(() => null);
+
+        if (serverRes.ok && data && data.reply) {
+          if (!this.serverHasKey) {
+            this.serverHasKey = true;
+            this.updateConfigStatus();
+          }
+          return data.reply;
+        }
+
+        if (data && data.error === 'MISSING_KEY') {
+          const keyErr = new Error(data.message || 'Chave de API do Gemini não configurada.');
+          keyErr.isMissingKey = true;
+          throw keyErr;
+        }
+
+        if (data && data.error === 'GEMINI_ERROR') {
+          throw new Error(data.message || 'Erro reportado pelo Google Gemini no servidor.');
         }
       } catch (e) {
+        if (e.isMissingKey) {
+          throw e;
+        }
+        // Se a chamada ao backend falhar por erro de rede (ex: hospedagem puramente estática)
+        if (!this.apiKey) {
+          const keyErr = new Error('Chave de API não informada no servidor nem no navegador.');
+          keyErr.isMissingKey = true;
+          throw keyErr;
+        }
         console.info('Tentando chamada direta à API do Google Gemini via client-side fallback...');
       }
 
-      // Chamada direta à API do Google Gemini (Client-side)
+      // Se não há chave direta no cliente, solicitar
+      if (!this.apiKey) {
+        const keyErr = new Error('Chave de API necessária.');
+        keyErr.isMissingKey = true;
+        throw keyErr;
+      }
+
+      // Chamada direta à API do Google Gemini (Client-side Fallback)
       const contents = validMessages.map(m => ({
         role: m.role === 'model' || m.role === 'ai' ? 'model' : 'user',
         parts: [{ text: m.text }]
       }));
 
-      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(this.apiKey)}`;
 
       const response = await fetch(geminiUrl, {
         method: 'POST',

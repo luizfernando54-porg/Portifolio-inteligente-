@@ -102,9 +102,48 @@ geminiChecks.forEach((c, idx) => {
   }
 });
 
+// 4. Testar Configurações de Alojamento e Ambiente (.env, .gitignore, package.json)
+console.log('\n4. Verificando arquivos de ambiente e configuração de hospedagem:');
+const gitignorePath = path.join(ROOT_DIR, '.gitignore');
+const envExamplePath = path.join(ROOT_DIR, '.env.example');
+const envPath = path.join(ROOT_DIR, '.env');
+const packageJsonPath = path.join(ROOT_DIR, 'package.json');
+
+const hostingChecks = [
+  {
+    label: 'Arquivo .env local existe no projeto',
+    test: fs.existsSync(envPath)
+  },
+  {
+    label: 'Arquivo .env.example presente para documentação e deploy',
+    test: fs.existsSync(envExamplePath) && fs.readFileSync(envExamplePath, 'utf8').includes('GEMINI_API_KEY')
+  },
+  {
+    label: 'Arquivo .gitignore protege o .env contra vazamento no Git/GitHub',
+    test: fs.existsSync(gitignorePath) && fs.readFileSync(gitignorePath, 'utf8').includes('.env')
+  },
+  {
+    label: 'Arquivo package.json com scripts de start e test para hospedagem',
+    test: fs.existsSync(packageJsonPath) && fs.readFileSync(packageJsonPath, 'utf8').includes('"start": "node server.js"')
+  },
+  {
+    label: 'Carregamento de .env e rotas de status/health implementadas no server.js',
+    test: serverJsContent.includes('loadEnv') && serverJsContent.includes('/api/status') && serverJsContent.includes('/api/health')
+  }
+];
+
+hostingChecks.forEach((c, idx) => {
+  if (c.test) {
+    console.log(`  ✅ Verificação ${idx + 1}: ${c.label} - OK!`);
+  } else {
+    console.error(`  ❌ Verificação ${idx + 1}: Falhou em ${c.label}`);
+    allPassed = false;
+  }
+});
+
 console.log('\n========================================');
 if (allPassed) {
-  console.log('🎉 TODOS OS TESTES PASSARAM COM SUCESSO (HTML + LINKS + GEMINI API)!');
+  console.log('🎉 TODOS OS TESTES PASSARAM COM SUCESSO (HTML + LINKS + GEMINI API + HOSPEDAGEM/.ENV)!');
 } else {
   console.log('⚠️ ALGUNS TESTES FALHARAM.');
 }

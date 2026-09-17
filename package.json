@@ -1,0 +1,26 @@
+{
+  "name": "portifolio-inteligente-squad-a",
+  "version": "1.0.0",
+  "description": "Portfólio Inteligente do Squad A (OS Debs - FICR) com Assistente Virtual Angelina integrada ao Google Gemini",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node test_suite.js"
+  },
+  "keywords": [
+    "portfolio",
+    "squad-a",
+    "ficr",
+    "gemini",
+    "ai",
+    "assistant",
+    "angelina",
+    "os-debs"
+  ],
+  "author": "Squad A - FICR",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

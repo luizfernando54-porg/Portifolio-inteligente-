@@ -1,8 +1,8 @@
 /**
- * Servidor HTTP Local com API Proxy para Google Gemini
+ * Servidor HTTP Local e Hospedagem com API Proxy para Google Gemini
  * Squad A - "OS Debs" (FICR)
  * 
- * Uso: node server.js
+ * Uso: node server.js ou npm start
  * Acesse: http://localhost:3000
  */
 
@@ -10,7 +10,43 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+// Carregamento robusto e nativo de variáveis de ambiente do arquivo .env
+(function loadEnv() {
+  const envPath = path.join(__dirname, '.env');
+  if (fs.existsSync(envPath)) {
+    if (typeof process.loadEnvFile === 'function') {
+      try {
+        process.loadEnvFile(envPath);
+        return;
+      } catch (e) {
+        // Prossegue para o parser de fallback se necessário
+      }
+    }
+    try {
+      const content = fs.readFileSync(envPath, 'utf8');
+      content.split(/\r?\n/).forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) return;
+        const eqIdx = trimmed.indexOf('=');
+        if (eqIdx !== -1) {
+          const key = trimmed.slice(0, eqIdx).trim();
+          let val = trimmed.slice(eqIdx + 1).trim();
+          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.slice(1, -1);
+          }
+          if (process.env[key] === undefined) {
+            process.env[key] = val;
+          }
+        }
+      });
+    } catch (err) {
+      console.warn('Aviso: erro ao carregar variáveis do .env:', err.message);
+    }
+  }
+})();
+
 const PORT = process.env.PORT || 3000;
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
 const BASE_DIR = __dirname;
 
 const MIME_TYPES = {
@@ -67,6 +103,26 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // Rota de Status da IA e Servidor: GET /api/status
+  if (req.method === 'GET' && req.url === '/api/status') {
+    const hasServerKey = Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim() !== '');
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({
+      status: 'online',
+      hasServerKey: hasServerKey,
+      model: GEMINI_MODEL,
+      version: '1.0.0'
+    }));
+    return;
+  }
+
+  // Rota de Health Check para Plataformas de Hospedagem: GET /api/health
+  if (req.method === 'GET' && req.url === '/api/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ status: 'ok', uptime: process.uptime() }));
+    return;
+  }
+
   // Rota de API do Chat com Gemini: POST /api/chat
   if (req.method === 'POST' && req.url === '/api/chat') {
     let body = '';
@@ -80,7 +136,7 @@ const server = http.createServer(async (req, res) => {
           res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
           res.end(JSON.stringify({
             error: 'MISSING_KEY',
-            message: 'Chave de API do Gemini não fornecida. Configure sua API Key no painel do chat para ativar o diálogo em tempo real.'
+            message: 'Chave de API do Gemini não configurada. Defina GEMINI_API_KEY no arquivo .env do servidor ou insira no ícone ⚙️ do chat.'
           }));
           return;
         }
@@ -98,7 +154,9 @@ const server = http.createServer(async (req, res) => {
           parts: [{ text: m.text || m.content || '' }]
         }));
 
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(userApiKey)}`;
+        // Endpoint padrão: models/gemini-1.5-flash:generateContent
+        const selectedModel = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(selectedModel)}:generateContent?key=${encodeURIComponent(userApiKey)}`;
 
         const geminiResponse = await fetch(geminiUrl, {
           method: 'POST',
@@ -132,7 +190,7 @@ const server = http.createServer(async (req, res) => {
         }
 
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ reply: candidateText, model: 'gemini-2.5-flash' }));
+        res.end(JSON.stringify({ reply: candidateText, model: selectedModel }));
       } catch (err) {
         console.error('Erro no endpoint /api/chat:', err);
         res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -170,10 +228,15 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
+  const hasKey = Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim() !== '');
   console.log(`\n======================================================`);
   console.log(`🚀 Servidor Squad A ativo em: http://localhost:${PORT}`);
+  console.log(`🌍 Disponível para hospedagem em 0.0.0.0:${PORT}`);
   console.log(`✨ Rota Gemini API ativa em: POST /api/chat`);
+  console.log(`📡 Status da IA: GET /api/status`);
+  console.log(`🔑 Chave Gemini (.env): ${hasKey ? 'CONFIGURADA (Ativa)' : 'NÃO DETECTADA (Defina no .env ou no chat)'}`);
+  console.log(`🧠 Modelo da IA: ${GEMINI_MODEL}`);
   console.log(`💬 Angelina dialogando em tempo real com o Gemini!`);
   console.log(`Pressione Ctrl+C para encerrar.`);
   console.log(`======================================================\n`);
